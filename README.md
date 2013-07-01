@@ -1,8 +1,8 @@
 NOTES
 ====================
-Node name | Role 
-mco-hub   | logical hub broker 
-mco-b1    | spoke broker 
+Node name | Role  
+mco-hub   | logical hub broker   
+mco-b1    | spoke broker   
 
 The file activemq-hub.xml would be used by the logical hub broker which does not have any defined networkConnectors.
 
