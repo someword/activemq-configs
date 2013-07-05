@@ -6,6 +6,11 @@
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
+    <bean class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+        <property name="optimizeAcknowledge">
+            <value>true</value>
+        </property>
+    </bean>
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
@@ -13,22 +18,12 @@
         </property>
     </bean>
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="mco-b1" useJmx="true" schedulePeriodForDestinationPurge="60000">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="mco-hub1.phx1.somedomain.name" useJmx="true" schedulePeriodForDestinationPurge="60000" networkConnectorStartAsync="true" deleteAllMessagesOnStartup="true">
         <destinationPolicy>
           <policyMap>
             <policyEntries>
               <policyEntry topic=">" producerFlowControl="false"/>
               <policyEntry queue="*.reply.>" gcInactiveDestinations="true" inactiveTimoutBeforeGC="300000" />
-              <policyEntry queue=">">
-              <!-- 
-              Tell the dead letter strategy not to process expired messages
-              so that they will just be discarded instead of being sent to
-              the DLQ 
-              -->
-                <deadLetterStrategy>
-                  <sharedDeadLetterStrategy processExpired="false" />
-                </deadLetterStrategy>
-              </policyEntry>
             </policyEntries>
           </policyMap>
         </destinationPolicy>
@@ -36,26 +31,57 @@
         <managementContext>
             <managementContext createConnector="false"/>
         </managementContext>
-
         <persistenceAdapter>
           <kahaDB directory="/var/cache/activemq/data" journalMaxFileLength="64mb"/>
         </persistenceAdapter>
 
         <plugins>
           <statisticsBrokerPlugin/>
+          <simpleAuthenticationPlugin>
+            <users>
+            </users>
+          </simpleAuthenticationPlugin>
+          <authorizationPlugin>
+            <map>
+              <authorizationMap>
+                <authorizationEntries>
+                  <authorizationEntry queue=">" write="admins" read="admins" admin="admins" />
+                  <authorizationEntry queue="global.reply.>" write="allcollectives" admin="allcollectives" />
+                  <authorizationEntry queue="us.reply.>" write="us" admin="us" />
+                  <authorizationEntry queue="us_infra.reply.>" write="us_infra" admin="us_infra" />
+                  <authorizationEntry queue="us_services.reply.>" write="us_services" admin="us_services" />
+                  <authorizationEntry queue="us_customer.reply.>" write="us_customer" admin="us_customer" />
+                  <authorizationEntry queue="global.nodes" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry queue="us.nodes" read="us" admin="us" />
+                  <authorizationEntry queue="us_infra.nodes" read="us_infra" admin="us_infra" />
+                  <authorizationEntry queue="us_services.nodes" read="us_services" admin="us_services" />
+                  <authorizationEntry queue="us_customer.nodes" read="us_customer" admin="us_customer" />
+                  <authorizationEntry topic=">" write="admins" read="admins" admin="admins" />
+                  <authorizationEntry topic="global.registration.agent" write="allcollectives" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry topic="global.*.agent" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry topic="us.registration.agent" write="us" read="us" admin="us" />
+                  <authorizationEntry topic="us.*.agent" read="us" admin="us" />
+                  <authorizationEntry topic="us_infra.*.agent" read="us_infra" admin="us_infra" />
+                  <authorizationEntry topic="us_services.*.agent" read="us_services" admin="us_services" />
+                  <authorizationEntry topic="us_customer.*.agent" read="us_customer" admin="us_customer" />
+                  <authorizationEntry topic="ActiveMQ.Advisory.>" write="everyone" read="everyone" admin="everyone" />
+                </authorizationEntries>
+              </authorizationMap>
+            </map>
+          </authorizationPlugin>
         </plugins>
 
         <sslContext>
           <sslContext
-            keyStore="ssl/keystore.jks" keyStorePassword="XXXX"
-            trustStore="ssl/truststore.jks" trustStorePassword="XXXX"
+            keyStore="ssl/keystore.jks" keyStorePassword="XXXXXXX"
+            trustStore="ssl/truststore.jks" trustStorePassword="XXXXXXX"
           />
         </sslContext>
 
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
-                    <memoryUsage limit="128 mb"/>
+                    <memoryUsage limit="2 gb"/>
                 </memoryUsage>
                 <storeUsage>
                     <storeUsage limit="10 gb" name="foo"/>
