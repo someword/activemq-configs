@@ -1,0 +1,98 @@
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
+
+    <bean class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+        <property name="optimizeAcknowledge">
+            <value>true</value>
+        </property>
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.base}/conf/credentials.properties</value>
+        </property>
+    </bean>
+
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="mco-broker1.kr1.somedomain.com" useJmx="true" schedulePeriodForDestinationPurge="60000" networkConnectorStartAsync="true" deleteAllMessagesOnStartup="true">
+        <destinationPolicy>
+          <policyMap>
+            <policyEntries>
+              <policyEntry topic=">" producerFlowControl="false"/>
+              <policyEntry queue=">" gcInactiveDestinations="true" inactiveTimoutBeforeGC="300000" />
+            </policyEntries>
+          </policyMap>
+        </destinationPolicy>
+
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+        <persistenceAdapter>
+          <kahaDB directory="/var/cache/activemq/data" journalMaxFileLength="64mb"/>
+        </persistenceAdapter>
+
+        <plugins>
+          <statisticsBrokerPlugin/>
+          <simpleAuthenticationPlugin>
+          </simpleAuthenticationPlugin>
+          <authorizationPlugin>
+            <map>
+              <authorizationMap>
+                <authorizationEntries>
+                  <authorizationEntry queue=">" write="admins" read="admins" admin="admins" />
+                  <authorizationEntry queue="global.reply.>" write="allcollectives" admin="allcollectives" />
+                  <authorizationEntry queue="eu.reply.>" write="eu" admin="eu" />
+                  <authorizationEntry queue="eu_infra.reply.>" write="eu_infra" admin="eu_infra" />
+                  <authorizationEntry queue="eu_services.reply.>" write="eu_services" admin="eu_services" />
+                  <authorizationEntry queue="eu_customer.reply.>" write="eu_customer" admin="eu_customer" />
+                  <authorizationEntry queue="global.nodes" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry queue="eu.nodes" read="eu" admin="eu" />
+                  <authorizationEntry queue="eu_infra.nodes" read="eu_infra" admin="eu_infra" />
+                  <authorizationEntry queue="eu_services.nodes" read="eu_services" admin="eu_services" />
+                  <authorizationEntry queue="eu_customer.nodes" read="eu_customer" admin="eu_customer" />
+                  <authorizationEntry topic=">" write="admins" read="admins" admin="admins" />
+                  <authorizationEntry topic="global.registration.agent" write="allcollectives" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry topic="global.*.agent" read="allcollectives" admin="allcollectives" />
+                  <authorizationEntry topic="eu.registration.agent" write="eu" read="eu" admin="eu" />
+                  <authorizationEntry topic="eu.*.agent" read="eu" admin="eu" />
+                  <authorizationEntry topic="eu_infra.*.agent" read="eu_infra" admin="eu_infra" />
+                  <authorizationEntry topic="eu_services.*.agent" read="eu_services" admin="eu_services" />
+                  <authorizationEntry topic="eu_customer.*.agent" read="eu_customer" admin="eu_customer" />
+                  <authorizationEntry topic="ActiveMQ.Advisory.>" write="everyone" read="everyone" admin="everyone" />
+                </authorizationEntries>
+              </authorizationMap>
+            </map>
+          </authorizationPlugin>
+        </plugins>
+
+        <sslContext>
+          <sslContext
+          />
+        </sslContext>
+
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage limit="3 gb"/>
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="10 gb" name="foo"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="1 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+
+        <transportConnectors>
+            <transportConnector name="openwiressl" uri="ssl://0.0.0.0:6167"/>
+            <transportConnector name="stompssl" uri="stomp+ssl://0.0.0.0:6164"/>
+        </transportConnectors>
+
+    </broker>
+    <import resource="jetty.xml"/>
+</beans>
